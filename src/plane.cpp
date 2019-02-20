@@ -4,19 +4,25 @@
 Plane::Plane(float x0, float y0, float z0, color_t color) {
     this->position = glm::vec3(x0, y0, z0);
     this->speed = 1;
+    this->rise = 1;
     // this->rotation = 0;
-    this->radius = 0.25;
+    this->radius = 0.25f;
     this->length = 2.5f;
     this->nose = 1.0f;
     this->engine = 0.25f;
     
-    this->rise=0;
     this->yaw = 0;
     this->pitch = 0;
     this->tilt = 0;
     
+    this->fuelleft = 10;
+
+    // this->center[0] = this->position.x + (this->length + this->nose + this->engine)*0.5*(sin(this->yaw* M_PI / 180.0f)*cos(this->pitch* M_PI / 180.0f));
+    // this->center[1] = this->position.y + (this->length + this->nose + this->engine)*0.5*(sin(-this->pitch* M_PI / 180.0f));
+    // this->center[2] = this->position.x + (this->length + this->nose + this->engine)*0.5*(cos(this->yaw* M_PI / 180.0f)*cos(this->pitch* M_PI / 180.0f));
+
     int sides = 100;
-    float angle = (2*M_PIl)/sides;
+    float angle = (2*M_PI)/sides;
 
     //Cockpit
     GLfloat vertex_buffer_data_cockpit[1800]; 
@@ -133,9 +139,9 @@ Plane::Plane(float x0, float y0, float z0, color_t color) {
     this->fuel = create3DObject(GL_TRIANGLES, 2*sides*3, vertex_buffer_data_engine, COLOR_ORANGE , GL_FILL);
 
     // Wings
-    float finwidth = 15.0f;
-    float finlength = 6.0f;
-    float finbreadth = 0.75f;
+    float finwidth = 10.0f;
+    float finlength = 8.0f;
+    float finbreadth = 1.0f;
     float finstart = length + engine;
     GLfloat vertex_buffer_data_fin[9];
     for(int i =0; i < 2; i++)
@@ -257,9 +263,11 @@ Plane::Plane(float x0, float y0, float z0, color_t color) {
 void Plane::draw(glm::mat4 VP) {
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
+
     glm::mat4 rotate_yaw = glm::rotate((float) (this->yaw * M_PI / 180.0f), glm::vec3(0, 1, 0));
     glm::mat4 rotate_pitch = glm::rotate((float) (this->pitch * M_PI / 180.0f), glm::vec3(1, 0, 0));
     glm::mat4 rotate_roll = glm::rotate((float) (this->tilt * M_PI / 180.0f), glm::vec3(0, 0, 1));
+
     // No need as coords centered at 0, 0, 0 of cube arouund which we waant to rotate
     // rotate          = rotate * glm::translate(glm::vec3(0, -0.6, 0));
     Matrices.model *= (translate * rotate_yaw * rotate_pitch * rotate_roll);
@@ -282,23 +290,33 @@ void Plane::tick() {
     // this->position.y -= speed;
 }
 
-void Plane::move_rise() {
-    this->rise = 0.2f;
-    this->position.y += rise;
-}
-
-void Plane::gravity(bool gravity_effect) {
-    if (gravity_effect) {
-        if (this->position.y <= 0) {
-            this->position.y = 0;
+void Plane::move_rise(bool up) {
+    // this->rise = 0.2f;
+    if (this->position.y >= 0) {
+        if (up) {
+            this->position.y += rise;
         }
-        else{
-            this->position.y += this->rise;
-            this->rise -= 0.01f;
-            printf("down\n");
+        else if (!up) {
+            this->position.y -= rise;
         }
     }
 }
+
+bool Plane::detect_collision(float planecenter[], float x, float y, float z, float radius) {
+    return ((int)sqrt(pow(planecenter[0]-x, 2)+pow(planecenter[2]-z, 2)) <= (int)radius);
+}
+// void Plane::gravity(bool gravity_effect) {
+//     if (gravity_effect) {
+//         if (this->position.y <= 0) {
+//             this->position.y = 0;
+//         }
+//         else{
+//             this->position.y += this->rise;
+//             this->rise -= 0.01f;
+//             printf("down\n");
+//         }
+//     }
+// }
 
 void Plane::tick_yaw( bool clockwise ) {
     if(clockwise) {
@@ -310,9 +328,19 @@ void Plane::tick_yaw( bool clockwise ) {
 }
 
 void Plane::tick_forward() {
-    // this->position.z += this->speed*cos(this-> * M_PI / 180.0f);
-    // this->position.y += this->speed*cos(this->yaw * M_PI / 180.0f);
-    // this->position.x += this->speed*cos(this->yaw * M_PI / 180.0f);
+    // this->fuelleft -= 0.000001f;
+    this->position.z += this->speed*(cos(this->yaw * M_PI / 180.0f));
+    this->position.y -= this->speed*sin(this->pitch * M_PI / 180.0f);
+    this->position.x += this->speed*(sin(this->yaw * M_PI / 180.0f));
+}
+
+void Plane::tick_pitch(bool upwards) {
+    if (upwards) {
+        this->pitch -= 1;
+    }
+    else if (!upwards) {
+        this->pitch += 1;
+    }
 }
 
 void Plane::tick_roll( bool right) {

@@ -66,10 +66,13 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
     switch (button) {
     case GLFW_MOUSE_BUTTON_LEFT:
         if (action == GLFW_PRESS) {
-            // Do something
+            // printf("fire\n");
+            // fire_missile();
+            // printf("fired\n");
             return;
         } else if (action == GLFW_RELEASE) {
-            // Do something
+            // ammo--;
+            // printf("%i\n", ammo);
         }
         break;
     // case GLFW_MOUSE_BUTTON_RIGHT:

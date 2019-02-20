@@ -99,5 +99,13 @@ extern const color_t COLOR_BACKGROUND;
 extern const color_t COLOR_METAL;
 extern const color_t COLOR_ORANGE;
 extern const color_t COLOR_BLUE;
+extern const color_t COLOR_SEABLUE;
+extern const color_t COLOR_YELLOW;
+extern const color_t COLOR_BROWN;
+extern const color_t COLOR_GROUND;
 
+extern const color_t FUEL_RED;
+extern const color_t FUEL_ORANGE;
+extern const color_t FUEL_YELLOW;
+extern const color_t FUEL_GREEN;
 #endif

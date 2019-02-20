@@ -9,7 +9,6 @@ public:
     Plane() {}
     Plane(float x0, float y0, float z0, color_t color);
     glm::vec3 position;
-    // float rotation;
     
     float radius;
     float length;
@@ -21,17 +20,22 @@ public:
     float pitch;
     float tilt;
 
-    float fuelleft;
+    int fuelleft;
 
+    float center[3];
     void draw(glm::mat4 VP);
     void set_position(float x, float y);
     void tick();
-    void move_rise();
-    void gravity( bool gravity_effect );
-    void tick_yaw( bool clockwise);
+    void move_rise(bool up);
+    // void gravity( bool gravity_effect );
+    void tick_yaw(bool clockwise);
     void tick_forward();
-    void tick_roll( bool right);
+    void tick_roll(bool right);
+    void tick_pitch(bool upwards);
     double speed;
+
+    // void ();
+    bool detect_collision(float planecenter[], float x, float y, float z, float radius);
 private:
     VAO *cockpit;
     VAO *body;
