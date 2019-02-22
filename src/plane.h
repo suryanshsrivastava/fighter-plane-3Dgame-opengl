@@ -20,7 +20,7 @@ public:
     float pitch;
     float tilt;
 
-    int fuelleft;
+    float fuelleft;
 
     float center[3];
     void draw(glm::mat4 VP);

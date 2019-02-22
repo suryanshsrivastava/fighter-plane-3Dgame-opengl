@@ -3,7 +3,6 @@
 #include "plane.h"
 #include "sea.h"
 #include "dashboard.h"
-#include "score.h"
 #include "objects.h"
 #include "combat.h"
 
@@ -26,6 +25,7 @@ vector<Shining> shines;
 vector<Ring> rings;
 vector<Volcano> volcanoes;
 
+int checkpoint =0;
 vector<CheckpointIsland> islands;
 vector<CheckpointArrow> checks;
 vector<Ring> checkrings;
@@ -34,15 +34,26 @@ vector<Missile> missiles;
 int ammo = 1000;
 int n = 1000;
 
+vector<Parachute> parachutes;
+vector<Cannons> cannons;
+vector<Cannon_Missile> cannonbullets;
+int cannonammo = 0;
+
 SpeedDial speeddash;
 Speed speed;
-Digit altitude;
+// Digit altitude;
+SpeedDial altitudemeter;
+Speed altitude;
+
 Fuel fuellevel0;
 Fuel fuellevel1;
 Fuel fuellevel2;
 Fuel fuellevel3;
 Fuel fuellevel4;
 Fuel fuellevel5;
+vector <Fueltank> fuelup;
+float theta = 0;
+float fi = 0;
 
 float planecenter[3];
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
@@ -108,20 +119,33 @@ void draw() {
         volcanoes[i].draw(VP);
     }
 
+    islands[checkpoint].current = true;
     for(int i=0; i<islands.size(); i++) {
         islands[i].draw(VP);
     }
     for(int i=0; i<checks.size(); i++) {
-        checks[i].draw(VP);
+        if (islands[i].current) {
+            checks[i].draw(VP);
+        }
     }
     for(int i=0; i<checkrings.size(); i++) {
         checkrings[i].draw(VP);
     }
+    for(int i=0; i<cannons.size(); i++) {
+        cannons[i].draw(VP);
+    }
+    for(int i=0; i<cannonbullets.size(); i++) {
+            // printf("made\n");
+
+        cannonbullets[i].draw(VP);
+    }
+    for(int i=0; i<parachutes.size(); i++) {
+        parachutes[i].draw(VP);
+    }
+
 
     for(int i=0; i<n; i++) {
-        // printf("%i\n", missiles[i].fired); 
         if (missiles[i].fired) {
-            // printf("draw\n");
             missiles[i].draw(VP);
         }
     }
@@ -162,6 +186,7 @@ void draw() {
 
 void camera_view_change () {
     float R = plane.length + 5.0f;
+    
     //Plane View
     if(cam == 1)
     {
@@ -202,6 +227,14 @@ void camera_view_change () {
         
         current.up_x=0; current.up_y=1; current.up_z=0;
     }
+
+    else if (cam == 5) {
+        current.eye_x=plane.position.x - R*(sin(theta)*cos(fi)); current.eye_y=plane.position.y - R*cos(fi); current.eye_z=plane.position.z - R*(sin(theta)*sin(fi)); 
+        
+        current.target_x=plane.position.x + R*(sin(plane.yaw* M_PI / 180.0f)); current.target_y=plane.position.y; current.target_z=plane.position.z + R*(cos(plane.yaw* M_PI / 180.0f));
+        
+        current.up_x=0; current.up_y=1; current.up_z=0;
+    } 
 }
 
 void tick_elements() {
@@ -216,6 +249,32 @@ void tick_elements() {
             // printf("movinggggg%f", missiles[i].position.y);
             missiles[i].tick(plane.yaw);
         }        
+    }
+    for(int i = 0; i < parachutes.size(); i++) 
+    {
+        parachutes[i].movement();
+    }
+    for(int i = 0; i < cannons.size(); i++)
+    {
+        if ((int)sqrt(pow(planecenter[0]-cannons[i].position.x, 2)+pow(planecenter[2]-cannons[i].position.z, 2))<= 50) {
+            if (cannonammo == 100) {
+            glm::vec3 a = plane.position;
+            glm::vec3 b = cannons[i].position;
+            glm::vec3 c = a-b;
+            glm::vec3 d = glm::normalize(c); //self assignmnet works?
+            printf("made  %f %f %f\n", d.x, d.y, d.z);
+            cannonbullets.push_back(Cannon_Missile(cannons[i].position.x, cannons[i].position.y, cannons[i].position.z, d*(1.0f)));
+        }
+        }
+    }
+    cannonammo++;
+    if (cannonammo == 200) {
+            cannonammo = 0;
+    }
+    
+    for(int i = 0; i < cannonbullets.size(); i++) {
+        printf("%f %f %f\n", cannonbullets[i].position.x, cannonbullets[i].position.y, cannonbullets[i].position.z);
+        cannonbullets[i].movement();
     }
 
     for(int i=0; i<checks.size(); i++) checks[i].movement();
@@ -233,13 +292,51 @@ void tick_elements() {
             quit(window);  
         }
     }
-    
-    //When plane passes through a ring
-    // for(int i=0; i<rings.size(); i++) {
-    //     if (detect_collision(rings[i].bounding_box(), plane.bounding_box()) {
-    //         rings.erase(rings.begin()+i);
-    //     }
-    // }
+
+    //Rings
+    for(int i=0; i<rings.size(); i++) {
+        if (detect_collision(plane.position, rings[i].position, plane.length , rings[i].innerradius)) {
+            rings[i].collected = true;
+        }
+    }
+    for(int i=0; i<checkrings.size(); i++) {
+        if (detect_collision(plane.position, checkrings[i].position, plane.length , checkrings[i].innerradius)) {
+            checkrings[i].collected = true;
+        }
+    }
+
+    //missiles
+    for(int i=0; i < cannons.size(); i++) 
+    {
+        for(int j = 0; j < missiles.size(); j++)
+        {
+            if (detect_collision(missiles[j].position, cannons[i].position, cannons[i].spread , missiles[j].length)) {
+            cannons[i].destroyed = true;
+            if (islands[i].current) {
+                checkpoint++;
+                cannons.erase(cannons.begin()+i);
+            }
+            else
+            {
+                cannons[i].destroyed = false;
+            }
+            }
+        }
+    }
+    for(int i=0; i < parachutes.size(); i++) 
+    {
+        for(int j=0; j < missiles.size(); j++)
+        {
+            if (detect_collision(missiles[j].position, parachutes[i].position, parachutes[i].outerradius , missiles[j].length)) {
+            parachutes[i].destroyed = true;
+            }
+        }
+    }
+    for(int i=0; i < parachutes.size(); i++){
+        if (parachutes[i].destroyed) {
+            parachutes.erase(parachutes.begin()+i);
+        }
+    } 
 }
 
 void tick_input(GLFWwindow *window) {
@@ -265,6 +362,10 @@ void tick_input(GLFWwindow *window) {
         cam = 4;
     }
     int num4 = glfwGetKey(window, GLFW_KEY_KP_4);
+    if (num4) {
+        cam = 5;
+    }
+    
     
     // rise
     int space = glfwGetKey(window, GLFW_KEY_SPACE);
@@ -276,17 +377,6 @@ void tick_input(GLFWwindow *window) {
     if(s) {
         plane.move_rise(false);
     }
-    // else 
-    // {
-    //     if(!locked){
-    //         gravity_effect = true;
-    //     }
-    // }
-    // int lock = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
-    // if (lock) {
-    //     locked = !locked;
-    //     gravity_effect = !gravity_effect;
-    // }
     
     //pitch
     int r = glfwGetKey(window, GLFW_KEY_R);
@@ -338,7 +428,8 @@ void tick_input(GLFWwindow *window) {
         printf("ammo:%i fired?:%i\n", ammo, missiles[ammo-1].fired);
         ammo--;
     }
-    
+    // double xy = glfwGetCursorPos(window, &x, &y);
+    // if 
 }
 
 /* Initialize the OpenGL rendering properties */
@@ -369,23 +460,34 @@ void initGL(GLFWwindow *window, int width, int height) {
         checks.push_back(CheckpointArrow(islands[i].position.x, 80.0f, islands[i].position.z));
     }
     for(int i=0; i<10; i++) {
-        checkrings.push_back(Ring(islands[i].position.x, 20.0f,islands[i].position.z));
+        checkrings.push_back(Ring(islands[i].position.x, 50.0f,islands[i].position.z));
     }
-
+    for(int i=0; i<10; i++) {
+        cannons.push_back(Cannons(islands[i].position.x, 5.0f, islands[i].position.z));
+    }
+    for(int i=0; i<70; i++) {
+        parachutes.push_back(Parachute(-c.width + rand()%(int)(2*c.width), rand()%100,-c.length + rand()%(int)(2*c.length)));
+    }
+    parachutes.push_back(Parachute(0, 20,10));
     for(int i=0; i<ammo; i++) {
         missiles.push_back(Missile(planecenter[0], planecenter[1], planecenter[2]));
     }
+
     //Dashboard Variables
     speeddash   = SpeedDial(-3.0f, -4.0f);
     speed       = Speed(-3.0f, -4.0f);
-    altitude    = Digit('0', 0.0f, 0.0f);
+    // altitudemeter = SpeedDial(-3.0)
+
+    // altitude    = Digit('0', 0.0f, 0.0f);
     fuellevel0  = Fuel(3.0f, -4.0f, FUEL_RED);
     fuellevel1  = Fuel(3.0f, -4.0f, FUEL_ORANGE);
     fuellevel2  = Fuel(3.0f, -3.4f, FUEL_YELLOW);
     fuellevel3  = Fuel(3.0f, -2.8f, FUEL_YELLOW);
     fuellevel4  = Fuel(3.0f, -2.2f, FUEL_GREEN);
     fuellevel5  = Fuel(3.0f, -1.6f, FUEL_GREEN);
-
+    for(int i=0; i<30; i++) {
+        fuelup.push_back(Fueltank(-c.width + rand()%(int)(2*c.width), 80.0f, -c.length + rand()%(int)(2*c.length)));
+    }
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
     // Get a handle for our "MVP" uniform
@@ -426,7 +528,7 @@ int main(int argc, char **argv) {
             draw();
             // Swap Frame Buffer in double buffering
             glfwSwapBuffers(window);
-            // printf("yaw:%f  pitch:%f forward:%f altitude:%f\n", plane.yaw, plane.pitch, plane.position.z, plane.position.y);
+            printf("checkpoint: %f, %f\n", islands[checkpoint].position.x, islands[checkpoint].position.z );
             tick_elements();
             // printf("%f\n", planecenter[0]);
             tick_input(window);
@@ -439,9 +541,8 @@ int main(int argc, char **argv) {
     quit(window);
 }
 
-bool detect_collision(bounding_box_t a, bounding_box_t b) {
-    return (abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-           (abs(a.y - b.y) * 2 < (a.height + b.height));
+bool detect_collision(glm::vec3 a, glm::vec3 b, float r1, float r2) {
+    return ((int)sqrt(pow(a.x-b.x, 2)+pow(a.y-b.y, 2)+pow(a.z-b.z,2)) <= (r1 + r2));
 }
 
 void reset_screen() {

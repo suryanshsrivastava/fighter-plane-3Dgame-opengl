@@ -33,6 +33,7 @@ void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
 void keyboardChar(GLFWwindow *window, unsigned int key);
 void mouseButton(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void joystick_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 // other_handlers.cpp
 void error_callback(int error, const char *description);
@@ -71,9 +72,10 @@ struct bounding_box_t {
     float height;
 };
 
-bool detect_collision(bounding_box_t a, bounding_box_t b);
+bool detect_collision(glm::vec3 a, glm::vec3 b, float r1, float r2);
 
 extern float screen_zoom, screen_center_x, screen_center_y;
+extern float theta, fi;
 void reset_screen();
 
 // ---- Camera ----

@@ -305,18 +305,6 @@ void Plane::move_rise(bool up) {
 bool Plane::detect_collision(float planecenter[], float x, float y, float z, float radius) {
     return ((int)sqrt(pow(planecenter[0]-x, 2)+pow(planecenter[2]-z, 2)) <= (int)radius);
 }
-// void Plane::gravity(bool gravity_effect) {
-//     if (gravity_effect) {
-//         if (this->position.y <= 0) {
-//             this->position.y = 0;
-//         }
-//         else{
-//             this->position.y += this->rise;
-//             this->rise -= 0.01f;
-//             printf("down\n");
-//         }
-//     }
-// }
 
 void Plane::tick_yaw( bool clockwise ) {
     if(clockwise) {
@@ -328,7 +316,7 @@ void Plane::tick_yaw( bool clockwise ) {
 }
 
 void Plane::tick_forward() {
-    // this->fuelleft -= 0.000001f;
+    this->fuelleft -= 0.01f;
     this->position.z += this->speed*(cos(this->yaw * M_PI / 180.0f));
     this->position.y -= this->speed*sin(this->pitch * M_PI / 180.0f);
     this->position.x += this->speed*(sin(this->yaw * M_PI / 180.0f));

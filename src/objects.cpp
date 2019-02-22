@@ -8,6 +8,7 @@ Ring::Ring(float x, float y, float z) {
     this->innerradius=10;
     this->outerradius=20;
     this->width=0.5f;
+    this->collected = false;
 
     int sides = 100;
     float angle = (2*M_PIl)/sides;
@@ -100,6 +101,7 @@ Ring::Ring(float x, float y, float z) {
     }
     
     this->object = create3DObject(GL_TRIANGLES, 6*sides*3, vertex_buffer_data_ring, COLOR_METAL, GL_LINE);
+    this->object2 = create3DObject(GL_TRIANGLES, 6*sides*3, vertex_buffer_data_ring, COLOR_BACKGROUND, GL_LINE);
 }
 
 void Ring::draw(glm::mat4 VP) {
@@ -110,7 +112,14 @@ void Ring::draw(glm::mat4 VP) {
     Matrices.model *= (translate * rotate);
     glm::mat4 MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(this->object);
+    
+    if(this->collected) {
+        draw3DObject(this->object2);
+    }
+    else
+    {
+        draw3DObject(this->object);
+    }
 }
 
 void Ring::set_position(float x, float y) {
@@ -217,4 +226,250 @@ void Volcano::draw(glm::mat4 VP) {
     draw3DObject(this->mountain);
     draw3DObject(this->lava);
     draw3DObject(this->island);
+}
+
+
+Fueltank::Fueltank(float x, float y, float z) {
+    this->position = glm::vec3(x, y, z);
+    this->rotation = 0;
+    this->innerradius=2;
+    this->outerradius=10;
+    this->width=6.0f;
+    // this->collected=
+
+    int sides = 100;
+    float angle = (2*M_PIl)/sides;
+
+    GLfloat vertex_buffer_data_ring[5400]; 
+
+    for(int i =0; i < sides; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos(i*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin(i*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width; 
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+        
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    for(int i =100; i < sides+100; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =200; i < sides+200; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width;
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =300; i < sides+300; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos(i*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin(i*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width; 
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+        
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    for(int i =400; i < sides+400; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = outerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =500; i < sides+500; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = outerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    
+    this->object = create3DObject(GL_TRIANGLES, 6*sides*3, vertex_buffer_data_ring, COLOR_RED, GL_FILL);
+}
+
+void Fueltank::draw(glm::mat4 VP) {
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translate = glm::translate (this->position);    // glTranslatef
+    glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 0, 1));
+    rotate          = glm::translate(glm::vec3(0, 0, 0)) * rotate * glm::translate(glm::vec3(0, 0, 0));
+    Matrices.model *= (translate * rotate);
+    glm::mat4 MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(this->object);
+}
+
+void Fueltank::set_position(float x, float y) {
+    this->position = glm::vec3(x, y, 0);
+}
+
+Parachute::Parachute(float x, float y, float z) {
+    this->position = glm::vec3(x, y, z);
+    this->radius=0.1f;
+    this->speed=0.0025f;
+    this->destroyed=false;
+    this->moveup=false;
+    
+    this->innerradius=10;
+    this->outerradius=20;
+    this->width=0.5f;
+
+    int sides = 100;
+    float angle = (2*M_PIl)/sides;
+
+    GLfloat vertex_buffer_data_ring[5400]; 
+    sides*=0.5;
+    for(int i =0; i < sides; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos(i*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin(i*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width; 
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+        
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    for(int i =100; i < sides+100; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =200; i < sides+200; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width;
+
+        vertex_buffer_data_ring[9*i + 3] = innerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = innerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = innerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =300; i < sides+300; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos(i*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin(i*angle);  
+        vertex_buffer_data_ring[9*i + 2] = width; 
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = innerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+        
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    for(int i =400; i < sides+400; i++)
+    {
+        vertex_buffer_data_ring[9*i] = outerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = outerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = outerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = width;
+
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = width;
+    }
+    for(int i =500; i < sides+500; i++)
+    {
+        vertex_buffer_data_ring[9*i] = innerradius*cos((i+1)*angle);
+        vertex_buffer_data_ring[9*i + 1] = innerradius*sin((i+1)*angle);  
+        vertex_buffer_data_ring[9*i + 2] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 3] = outerradius*cos(i*angle); 
+        vertex_buffer_data_ring[9*i + 4] = outerradius*sin(i*angle);
+        vertex_buffer_data_ring[9*i + 5] = 0.0f;
+
+        vertex_buffer_data_ring[9*i + 6] = outerradius*cos((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 7] = outerradius*sin((i+1)*angle); 
+        vertex_buffer_data_ring[9*i + 8] = 0.0f;
+    }
+    // sides*=2;
+    this->balloon = create3DObject(GL_TRIANGLES, 6*sides*3, vertex_buffer_data_ring, COLOR_RED, GL_LINE);
+    
+    GLfloat vertex_buffer_data[] = {
+        outerradius, 0, width*0.5,
+        -outerradius, 0, width*0.5,
+        0, innerradius, width*0.5,
+    };
+    this->string = create3DObject(GL_TRIANGLES, 1, vertex_buffer_data, COLOR_BLACK , GL_LINE);
+    
+}
+
+void Parachute::draw(glm::mat4 VP) {
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translate = glm::translate (this->position);    // glTranslatef
+    // glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 0, 1));
+    // rotate          = glm::translate(glm::vec3(0, 0, 0)) * rotate * glm::translate(glm::vec3(0, 0, 0));
+    Matrices.model *= (translate);
+    glm::mat4 MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(this->balloon);
+}
+
+void Parachute::movement() {
+    if (this->position.y>=0) {
+        this->position.y -= this->speed;
+    }
 }

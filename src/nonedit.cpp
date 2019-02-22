@@ -66,6 +66,7 @@ GLFWwindow*initGLFW(int width, int height) {
     glfwSetMouseButtonCallback(window, mouseButton); // mouse button clicks
     glfwSetScrollCallback(window, scroll_callback);
 
+    glfwSetCursorPosCallback(window, joystick_callback);
     return window;
 }
 

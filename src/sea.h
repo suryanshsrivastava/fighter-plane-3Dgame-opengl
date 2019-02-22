@@ -66,4 +66,27 @@ public:
 private:
     VAO* arrow;
 };
+
+class Cannons {
+public:
+    Cannons() {}
+    Cannons(float x, float y, float z);
+    glm::vec3 position;
+    float height;
+    float width;
+    float innerradius;
+    float outerradius;
+    float spread;
+
+    float yaw;
+    float pitch;
+    float rotatespeed;
+
+    bool destroyed;
+    void draw(glm::mat4 VP);
+    void movement();
+private:
+    VAO* base;
+    VAO* top; // top 
+};
 #endif // SEA_H
